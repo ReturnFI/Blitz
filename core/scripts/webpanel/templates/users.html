@@ -3,6 +3,19 @@
 {% block title %}Users{% endblock %}
 
 {% block content %}
+<style>
+    /* Make the card-header sticky at the top of the card with bokeh (blur) effect */
+    .card-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.75); /* semi-transparent for bokeh */
+        border-bottom: 1px solid #dee2e6;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px); /* Safari support */
+        transition: background 0.3s;
+    }
+</style>
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
