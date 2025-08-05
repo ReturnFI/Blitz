@@ -13,7 +13,7 @@ pillow==11.3.0
 propcache==0.3.2
 psutil==7.0.0
 pypng==0.20220715.0
-pyTelegramBotAPI==4.27.0
+pyTelegramBotAPI==4.28.0
 python-dotenv==1.1.1
 qrcode==8.2
 requests==2.32.4
