@@ -53,12 +53,16 @@
 
 ### نصب با یک کلیک  
 ```bash
-bash <(curl https://raw.githubusercontent.com/ReturnFI/Blitz/main/install.sh)
+bash <(curl https://raw.githubusercontent.com/ReturnFI/Blitz/nodb/install.sh)
 ```
 پس از نصب، از دستور `hys2` برای اجرای پنل مدیریت استفاده کنید.  
 
 **نیازی به اجرای مجدد دستور نصب نیست.**  
 
+### بروزرسانی 
+```bash
+bash <(curl https://raw.githubusercontent.com/ReturnFI/Blitz/nodb/upgrade.sh)
+```
 
 ---
 

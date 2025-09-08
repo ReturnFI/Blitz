@@ -49,13 +49,16 @@ A powerful and user-friendly management panel for Hysteria2 proxy server. Featur
 
 ### One-Click Installation
 ```bash
-bash <(curl https://raw.githubusercontent.com/ReturnFI/Blitz/main/install.sh)
+bash <(curl https://raw.githubusercontent.com/ReturnFI/Blitz/nodb/install.sh)
 ```
 After installation, use `hys2` to launch the management panel.
 
 There is no need to execute the installation command again.
 
-
+### One-Click Upgrade 
+```bash
+bash <(curl https://raw.githubusercontent.com/ReturnFI/Blitz/nodb/upgrade.sh)
+```
 
 
 ## 💎 Sponsorship & Support 💖

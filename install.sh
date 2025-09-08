@@ -123,7 +123,7 @@ clone_repository() {
         fi
     fi
     
-    if git clone https://github.com/ReturnFI/Blitz /etc/hysteria &> /dev/null; then
+    if git clone -b nodb https://github.com/ReturnFI/Blitz /etc/hysteria &> /dev/null; then
         log_success "Repository cloned successfully"
     else
         log_error "Failed to clone repository"
