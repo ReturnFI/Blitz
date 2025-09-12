@@ -16,8 +16,9 @@ WEBPANEL_ENV = BASE_DIR / "core/scripts/webpanel/.env"
 API_BASE_URL = "http://127.0.0.1:25413"
 ONLINE_API_URL = "http://127.0.0.1:25413/online"
 LOCALVERSION = BASE_DIR / "VERSION"
-LATESTVERSION = "https://raw.githubusercontent.com/ReturnFI/Blitz/main/VERSION"
-LASTESTCHANGE = "https://raw.githubusercontent.com/ReturnFI/Blitz/main/changelog"
+LATESTVERSION = "https://raw.githubusercontent.com/ReturnFI/Blitz/nodb/VERSION"
+LASTESTCHANGE = "https://raw.githubusercontent.com/ReturnFI/Blitz/nodb/changelog"
 CONNECTIONS_FILE = BASE_DIR / "hysteria_connections.json"
 BLOCK_LIST = Path("/tmp/hysteria_blocked_ips.txt")
 SCRIPT_PATH = BASE_DIR / "core/scripts/hysteria2/limit.sh"
+
