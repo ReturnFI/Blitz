@@ -9,6 +9,7 @@ import sys
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from io import BytesIO
+from urllib.parse import quote
 
 from aiohttp import web
 from aiohttp.web_middlewares import middleware
@@ -127,6 +128,8 @@ class TemplateContext:
     expiration_date: str
     sublink_qrcode: str
     sub_link: str
+    singbox_qrcode: str
+    singbox_link: str
     blocked: bool = False
     local_uris: List[NodeURI] = field(default_factory=list)
     node_uris: List[NodeURI] = field(default_factory=list)
@@ -565,6 +568,8 @@ class HysteriaServer:
             expiration_date=user_info.expiration_date,
             sublink_qrcode="",
             sub_link="#blocked",
+            singbox_qrcode="",
+            singbox_link="#blocked",
             blocked=True,
             local_uris=[
                 NodeURI(
@@ -605,6 +610,13 @@ class HysteriaServer:
         sub_link = f"{base_url}/{self.config.subpath}/sub/normal/{user_info.password}"
         sublink_qrcode = Utils.generate_qrcode_base64(sub_link)
         
+        # Generate sing-box import URL format
+        # sing-box://import-remote-profile?url=<URL-ENCODED-remote-config-url>#<URL-ENCODED-profile-name>
+        encoded_sub_link = quote(sub_link, safe='')
+        encoded_username = quote(username, safe='')
+        singbox_import_url = f"sing-box://import-remote-profile?url={encoded_sub_link}#{encoded_username}"
+        singbox_qrcode = Utils.generate_qrcode_base64(singbox_import_url)
+
         local_uris = []
         node_uris = []
 
@@ -626,6 +638,8 @@ class HysteriaServer:
             expiration_date=user_info.expiration_date,
             sublink_qrcode=sublink_qrcode,
             sub_link=sub_link,
+            singbox_qrcode=singbox_qrcode,
+            singbox_link=singbox_import_url,
             blocked=user_info.blocked,
             local_uris=local_uris,
             node_uris=node_uris

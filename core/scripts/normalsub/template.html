@@ -386,11 +386,20 @@
                         <p class="card-text">Your subscription link is disabled. Please contact support.</p>
                     </div>
                     {% else %}
-                    <div class="qr-item" style="grid-column: 1 / -1;">
+                    <div class="qr-item">
                         <h3 class="qr-title">Universal Subscription Link</h3>
                         <img src="{{ sublink_qrcode }}" alt="Subscription QR Code" class="qrcode">
                         <div class="btn-group">
                             <button class="btn btn-primary" onclick="copyToClipboard('{{ sub_link }}')">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="qr-item">
+                        <h3 class="qr-title">Sing-box Import Link</h3>
+                        <img src="{{ singbox_qrcode }}" alt="Sing-box Import QR Code" class="qrcode">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="copyToClipboard('{{ singbox_link }}')">
                                 <i class="fas fa-copy"></i> Copy
                             </button>
                         </div>
