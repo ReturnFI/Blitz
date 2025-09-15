@@ -35,6 +35,9 @@ class Database:
     def delete_user(self, username):
         return self.collection.delete_one({"_id": username.lower()})
 
+    def delete_users(self, usernames):
+        return self.collection.delete_many({"_id": {"$in": usernames}})
+
 try:
     db = Database()
 except pymongo.errors.ConnectionFailure:

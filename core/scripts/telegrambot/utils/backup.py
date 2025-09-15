@@ -11,7 +11,7 @@ from telebot import types
 from utils.command import *
 
 
-@bot.message_handler(func=lambda message: is_admin(message.from_user.id) and message.text == 'Backup Server')
+@bot.message_handler(func=lambda message: is_admin(message.from_user.id) and message.text == '💾 Backup Server')
 def backup_server(message):
     bot.reply_to(message, "Starting backup. This may take a few moments...")
     bot.send_chat_action(message.chat.id, 'typing')

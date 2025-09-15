@@ -14,7 +14,7 @@ def handle_cancel_show_user(call):
     bot.edit_message_text("Operation canceled.", chat_id=call.message.chat.id, message_id=call.message.message_id)
     create_main_markup(call.message)
 
-@bot.message_handler(func=lambda message: is_admin(message.from_user.id) and message.text == 'Show User')
+@bot.message_handler(func=lambda message: is_admin(message.from_user.id) and message.text == '🔍 Show User')
 def show_user(message):
     markup = types.InlineKeyboardMarkup()
     cancel_button = types.InlineKeyboardButton("❌ Cancel", callback_data="cancel_show_user")
@@ -106,14 +106,14 @@ def process_show_user(message):
     bio.seek(0)
     
     markup = types.InlineKeyboardMarkup(row_width=3)
-    markup.add(types.InlineKeyboardButton("Reset User", callback_data=f"reset_user:{actual_username}"),
-               types.InlineKeyboardButton("IPv6-URI", callback_data=f"ipv6_uri:{actual_username}"))
-    markup.add(types.InlineKeyboardButton("Edit Username", callback_data=f"edit_username:{actual_username}"),
-               types.InlineKeyboardButton("Edit Traffic Limit", callback_data=f"edit_traffic:{actual_username}"))
-    markup.add(types.InlineKeyboardButton("Edit Expiration Days", callback_data=f"edit_expiration:{actual_username}"),
-               types.InlineKeyboardButton("Renew Password", callback_data=f"renew_password:{actual_username}"))
-    markup.add(types.InlineKeyboardButton("Renew Creation Date", callback_data=f"renew_creation:{actual_username}"),
-               types.InlineKeyboardButton("Block User", callback_data=f"block_user:{actual_username}"))
+    markup.add(types.InlineKeyboardButton("🔄 Reset User", callback_data=f"reset_user:{actual_username}"),
+               types.InlineKeyboardButton("🌐 IPv6-URI", callback_data=f"ipv6_uri:{actual_username}"))
+    markup.add(types.InlineKeyboardButton("✏️ Edit Username", callback_data=f"edit_username:{actual_username}"),
+               types.InlineKeyboardButton("📶 Edit Traffic", callback_data=f"edit_traffic:{actual_username}"))
+    markup.add(types.InlineKeyboardButton("📅 Edit Expiration", callback_data=f"edit_expiration:{actual_username}"),
+               types.InlineKeyboardButton("🔑 Renew Password", callback_data=f"renew_password:{actual_username}"))
+    markup.add(types.InlineKeyboardButton("🕒 Renew Creation Date", callback_data=f"renew_creation:{actual_username}"),
+               types.InlineKeyboardButton("⛔ Block User", callback_data=f"block_user:{actual_username}"))
 
     caption = formatted_details
     if uri_v4:

@@ -184,23 +184,32 @@ def reset_user(username: str):
 
 
 @cli.command('remove-user')
-@click.option('--username', '-u', required=True, help='Username for the user to remove', type=str)
-def remove_user(username: str):
+@click.argument('usernames', nargs=-1, required=True)
+def remove_user(usernames: tuple[str]):
+    """Removes one or more users."""
+    if not usernames:
+        click.echo("No usernames provided.", err=True)
+        return
+        
     try:
-        cli_api.kick_user_by_name(username)
+        usernames_list = list(usernames)
+        cli_api.kick_users_by_name(usernames_list)
         cli_api.traffic_status(display_output=False)
-        cli_api.remove_user(username)
-        click.echo(f"User '{username}' removed successfully.")
+        cli_api.remove_users(usernames_list)
+        click.echo(f"Users '{', '.join(usernames)}' removed successfully.")
     except Exception as e:
         click.echo(f'{e}', err=True)
 
 @cli.command('kick-user')
-@click.option('--username', '-u', required=True, help='Username of the user to kick')
-def kick_user(username: str):
-    """Kicks a specific user by username."""
+@click.argument('usernames', nargs=-1, required=True)
+def kick_user(usernames: tuple[str]):
+    """Kicks one or more users by username."""
+    if not usernames:
+        click.echo("No usernames provided.", err=True)
+        return
+        
     try:
-        cli_api.kick_user_by_name(username)
-        # click.echo(f"User '{username}' kicked successfully.")
+        cli_api.kick_users_by_name(list(usernames))
     except Exception as e:
         click.echo(f'{e}', err=True)
 

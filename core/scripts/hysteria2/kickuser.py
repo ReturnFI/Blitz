@@ -36,15 +36,16 @@ def get_api_secret(config_path: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Kick a Hysteria2 user via the API.",
-        usage="%(prog)s <username>" 
+        description="Kick one or more Hysteria2 users via the API.",
+        usage="%(prog)s <username1> [username2] ..."
     )
     parser.add_argument(
-        "username",
-        help="The username (Auth identity) to kick."
+        "usernames",
+        nargs='+',
+        help="The username(s) (Auth identity) to kick."
     )
     args = parser.parse_args()
-    username_to_kick = args.username
+    usernames_to_kick = args.usernames
 
     try:
         api_secret = get_api_secret(CONFIG_FILE)
@@ -56,16 +57,14 @@ def main():
             secret=api_secret
         )
 
-        client.kick_clients([username_to_kick])
-
-        # print(f"User '{username_to_kick}' kicked successfully.")
+        client.kick_clients(usernames_to_kick)
         sys.exit(0)
 
     except (FileNotFoundError, KeyError, ValueError, json.JSONDecodeError) as e:
         print(f"Configuration Error: {e}", file=sys.stderr)
         sys.exit(1)
     except Hysteria2Error as e:
-        print(f"API Error kicking user '{username_to_kick}': {e}", file=sys.stderr)
+        print(f"API Error kicking users: {e}", file=sys.stderr)
         sys.exit(1)
     except ConnectionError as e:
          print(f"Connection Error: Could not connect to API at {API_BASE_URL}. Is it running? Details: {e}", file=sys.stderr)

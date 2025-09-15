@@ -351,24 +351,26 @@ def reset_user(username: str):
     run_cmd(['python3', Command.RESET_USER.value, username])
 
 
-def remove_user(username: str):
+def remove_users(usernames: list[str]):
     '''
-    Removes a user by username.
+    Removes one or more users by username.
     '''
-    run_cmd(['python3', Command.REMOVE_USER.value, username])
+    if not usernames:
+        return
+    run_cmd(['python3', Command.REMOVE_USER.value, *usernames])
 
-def kick_user_by_name(username: str):
-    '''Kicks a specific user by username.'''
-    if not username:
-        raise InvalidInputError('Username must be provided to kick a specific user.')
+def kick_users_by_name(usernames: list[str]):
+    '''Kicks one or more users by username.'''
+    if not usernames:
+        raise InvalidInputError('Username(s) must be provided to kick.')
     script_path = Command.KICK_USER_SCRIPT.value
     if not os.path.exists(script_path):
         raise ScriptNotFoundError(f"Kick user script not found at: {script_path}")
     try:
-        subprocess.run(['python3', script_path, username], check=True)
+        subprocess.run(['python3', script_path, *usernames], check=True)
     except subprocess.CalledProcessError as e:
         raise CommandExecutionError(f"Failed to execute kick user script: {e}")
-
+        
 # TODO: it's better to return json
 def show_user_uri(username: str, qrcode: bool, ipv: int, all: bool, singbox: bool, normalsub: bool) -> str | None:
     '''

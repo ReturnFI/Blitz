@@ -1,12 +1,12 @@
-### ⚡ **\[2.1.2] – AVX Check & Install Improvements**
+### 🚀 **\[2.2.1] – IP Limit Migration & UI Enhancements**
 
-*Released: 2025-09-12*
+*Released: 2025-09-15*
 
-#### ✨ Features
+#### 🗄️ Core & Scripts
 
-* 🛠️ **Upgrade Script**: Added AVX instruction set check
-* ℹ️ **Install Script**: Show nodb version notice if AVX not supported
+* Migrated **IP limit state** from legacy JSON file → MongoDB for consistency with new database system
+* Improved reliability & scalability for IP limit management
 
-#### 📦 Dependencies
+#### 🎨 User Interface
 
-* ⬆️ **pymongo** upgraded from `4.14.1` → `4.15.0`
+* Added **emoji icons** to command buttons for clearer visibility and better UX

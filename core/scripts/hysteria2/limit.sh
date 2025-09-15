@@ -4,22 +4,22 @@ source /etc/hysteria/core/scripts/path.sh
 
 # --- Configuration ---
 SERVICE_NAME="hysteria-ip-limit.service"
+DB_NAME="blitz_panel"
+CONNECTIONS_COLLECTION="active_connections"
 
 # Load configurations from .configs.env
 if [ -f "$CONFIG_ENV" ]; then
   source "$CONFIG_ENV"
-  BLOCK_DURATION="${BLOCK_DURATION:-60}" # Default to 60 seconds if not set
-  MAX_IPS="${MAX_IPS:-1}"               # Default to 1 IP if not set
+  BLOCK_DURATION="${BLOCK_DURATION:-60}" # Default to 60 seconds
+  MAX_IPS="${MAX_IPS:-1}"               # Default to 1 IP
 
   grep -q "^BLOCK_DURATION=" "$CONFIG_ENV" || echo -e "\nBLOCK_DURATION=$BLOCK_DURATION" >> "$CONFIG_ENV"
-
   grep -q "^MAX_IPS=" "$CONFIG_ENV" || echo "MAX_IPS=$MAX_IPS" >> "$CONFIG_ENV"
 else
   echo -e "BLOCK_DURATION=240\nMAX_IPS=5" > "$CONFIG_ENV"
 fi
 
 # --- Ensure files exist ---
-[ ! -f "$CONNECTIONS_FILE" ] && echo "{}" > "$CONNECTIONS_FILE"
 [ ! -f "$BLOCK_LIST" ] && touch "$BLOCK_LIST"
 
 # --- Logging function ---
@@ -29,69 +29,36 @@ log_message() {
     echo "[$(date +"%Y-%m-%d %H:%M:%S")] [$level] $message"
 }
 
-# --- Function to update the JSON file with new connection data ---
-update_json() {
+# --- Add an IP to the database for a user ---
+add_ip_to_db() {
     local username="$1"
     local ip_address="$2"
-
-    if command -v jq &>/dev/null; then
-        temp_file=$(mktemp)
-        jq --arg user "$username" --arg ip "$ip_address" \
-           '.[$user] += [$ip] | .[$user] |= unique' "$CONNECTIONS_FILE" > "$temp_file"
-        mv "$temp_file" "$CONNECTIONS_FILE"
-    else
-        if grep -q "\"$username\"" "$CONNECTIONS_FILE"; then
-            # Add IP to existing username (if it doesn't exist)
-            if ! grep -q "\"$username\".*\"$ip_address\"" "$CONNECTIONS_FILE"; then
-                sed -i -E "s/(\"$username\":\s*\[)([^\]]*)/\1\2,\"$ip_address\"/" "$CONNECTIONS_FILE"
-            fi
-        else
-            # Add new username with IP
-            sed -i -E "s/\{(.*)\}/{\1,\"$username\":[\"$ip_address\"]}/" "$CONNECTIONS_FILE"
-        fi
-    fi
-
-    log_message "INFO" "Updated JSON: Added $ip_address for user $username"
+    
+    mongosh "$DB_NAME" --quiet --eval "
+        db.getCollection('$CONNECTIONS_COLLECTION').updateOne(
+            { _id: '$username' },
+            { \$addToSet: { ips: '$ip_address' } },
+            { upsert: true }
+        );
+    "
+    log_message "INFO" "DB Update: Added $ip_address for user $username"
 }
 
-# --- Function to remove an IP from the JSON when client disconnects ---
-remove_ip() {
+# --- Remove an IP from the database for a user ---
+remove_ip_from_db() {
     local username="$1"
     local ip_address="$2"
-
-    if [ ! -f "$CONNECTIONS_FILE" ]; then
-        log_message "ERROR" "JSON file does not exist"
-        return
-    fi
-
-    if grep -q "\"$username\"" "$CONNECTIONS_FILE"; then
-        if command -v jq &>/dev/null; then
-            temp_file=$(mktemp)
-            jq --arg user "$username" --arg ip "$ip_address" \
-               '.[$user] = (.[$user] | map(select(. != $ip)))' "$CONNECTIONS_FILE" > "$temp_file"
-            mv "$temp_file" "$CONNECTIONS_FILE"
-
-            # Check if the user's IP list is now empty and remove the user if so
-            temp_file_check=$(mktemp)
-            jq --arg user "$username" 'if .[$user] | length == 0 then del(.[$user]) else . end' "$CONNECTIONS_FILE" > "$temp_file_check"
-            mv "$temp_file_check" "$CONNECTIONS_FILE"
-
-        else
-            # Basic sed replacement (not as reliable as jq)
-            sed -i -E "s/\"$ip_address\"(,|\])|\1\"$ip_address\"/\1/g" "$CONNECTIONS_FILE"
-            sed -i -E "s/,\s*\]/\]/g" "$CONNECTIONS_FILE"
-            sed -i -E "s/\[\s*,/\[/g" "$CONNECTIONS_FILE"
-
-            #  VERY Basic check if user's IP list is empty and remove the user if so (less reliable)
-            if grep -q "\"$username\":\s*\[\s*\]" "$CONNECTIONS_FILE"; then
-                sed -i "/\"$username\":\s*\[\s*\][,\s]*/d" "$CONNECTIONS_FILE"
-                sed -i "s/,\s*\}$/\n}/" "$CONNECTIONS_FILE" # Remove trailing comma if it exists after user deletion
-            fi
-        fi
-        log_message "INFO" "Updated JSON: Removed $ip_address for user $username"
-    else
-        log_message "WARN" "User $username not found in JSON"
-    fi
+    
+    mongosh "$DB_NAME" --quiet --eval "
+        db.getCollection('$CONNECTIONS_COLLECTION').updateOne(
+            { _id: '$username' },
+            { \$pull: { ips: '$ip_address' } }
+        );
+        db.getCollection('$CONNECTIONS_COLLECTION').deleteMany(
+            { _id: '$username', ips: { \$size: 0 } }
+        );
+    "
+    log_message "INFO" "DB Update: Removed $ip_address for user $username"
 }
 
 # --- Block an IP using iptables and track it ---
@@ -100,18 +67,13 @@ block_ip() {
     local username="$2"
     local unblock_time=$(( $(date +%s) + BLOCK_DURATION ))
 
-    # Skip if already blocked
     if iptables -C INPUT -s "$ip_address" -j DROP 2>/dev/null; then
         log_message "INFO" "IP $ip_address is already blocked"
         return
     fi
 
-    # Add to iptables
     iptables -I INPUT -s "$ip_address" -j DROP
-
-    # Add to block list with expiration time
     echo "$ip_address,$username,$unblock_time" >> "$BLOCK_LIST"
-
     log_message "WARN" "Blocked IP $ip_address for user $username for $BLOCK_DURATION seconds"
 }
 
@@ -119,41 +81,31 @@ block_ip() {
 unblock_ip() {
     local ip_address="$1"
 
-    # Remove from iptables if exists
     if iptables -C INPUT -s "$ip_address" -j DROP 2>/dev/null; then
         iptables -D INPUT -s "$ip_address" -j DROP
         log_message "INFO" "Unblocked IP $ip_address"
     fi
-
-    # Remove from block list
     sed -i "/$ip_address,/d" "$BLOCK_LIST"
 }
 
 # --- Block all IPs for a user ---
 block_all_user_ips() {
     local username="$1"
-    local ips=()
+    
+    local ips_json
+    ips_json=$(mongosh "$DB_NAME" --quiet --eval "
+        JSON.stringify(db.getCollection('$CONNECTIONS_COLLECTION').findOne({_id: '$username'}, {_id: 0, ips: 1}))
+    ")
 
-    # Get all IPs for this user
-    if command -v jq &>/dev/null; then
-        readarray -t ips < <(jq -r --arg user "$username" '.[$user][]' "$CONNECTIONS_FILE" 2>/dev/null)
-    else
-        # Basic extraction without jq (less reliable)
-        ip_list=$(grep -oP "\"$username\":\s*\[\K[^\]]*" "$CONNECTIONS_FILE")
-        IFS=',' read -ra ip_entries <<< "$ip_list"
-        for entry in "${ip_entries[@]}"; do
-            # Extract IP from the JSON array entry
-            ip=$(echo "$entry" | grep -oP '".*"' | tr -d '"' | tr -d '[:space:]')
-            if [[ -n "$ip" ]]; then
-                ips+=("$ip")
-            fi
-        done
+    if [[ -z "$ips_json" || "$ips_json" == "null" ]]; then
+        log_message "INFO" "No IPs to block for user $username"
+        return
     fi
-
-    # Block all IPs for this user
+    
+    local ips
+    readarray -t ips < <(echo "$ips_json" | jq -r '.ips[]')
+    
     for ip in "${ips[@]}"; do
-        ip=${ip//\"/}  # Remove quotes
-        ip=$(echo "$ip" | tr -d '[:space:]')  # Remove whitespace
         if [[ -n "$ip" ]]; then
             block_ip "$ip" "$username"
         fi
@@ -167,7 +119,6 @@ check_expired_blocks() {
     local current_time=$(date +%s)
     local ip username expiry
 
-    # Check each line in the block list
     while IFS=, read -r ip username expiry || [ -n "$ip" ]; do
         if [[ -n "$ip" && -n "$expiry" ]]; then
             if (( current_time >= expiry )); then
@@ -181,44 +132,22 @@ check_expired_blocks() {
 # --- Check if a user has exceeded the IP limit ---
 check_ip_limit() {
     local username="$1"
-    local ips=()
 
-    local is_unlimited="false"
-    if [ -f "$USERS_FILE" ]; then
-        if command -v jq &>/dev/null; then
-            is_unlimited=$(jq -r --arg user "$username" '.[$user].unlimited_user // "false"' "$USERS_FILE" 2>/dev/null)
-        else
-            if grep -q "\"$username\"" "$USERS_FILE" && \
-               grep -A 5 "\"$username\"" "$USERS_FILE" | grep -q '"unlimited_user": true'; then
-                is_unlimited="true"
-            fi
-        fi
-    fi
+    local is_unlimited
+    is_unlimited=$(mongosh "$DB_NAME" --quiet --eval "
+        db.users.findOne({_id: '$username'}, {_id: 0, unlimited_user: 1})?.unlimited_user || false;
+    ")
 
-    if [ "$is_unlimited" = "true" ]; then
+    if [ "$is_unlimited" == "true" ]; then
         log_message "INFO" "User $username is exempt from IP limit. Skipping check."
         return
     fi
+    
+    local ip_count
+    ip_count=$(mongosh "$DB_NAME" --quiet --eval "
+        db.getCollection('$CONNECTIONS_COLLECTION').findOne({_id: '$username'})?.ips?.length || 0;
+    ")
 
-    # Get all IPs for this user
-    if command -v jq &>/dev/null; then
-        readarray -t ips < <(jq -r --arg user "$username" '.[$user][]' "$CONNECTIONS_FILE" 2>/dev/null)
-    else
-        # Basic extraction without jq (less reliable)
-        ip_list=$(grep -oP "\"$username\":\s*\[\K[^\]]*" "$CONNECTIONS_FILE")
-        IFS=',' read -ra ip_entries <<< "$ip_list"
-        for entry in "${ip_entries[@]}"; do
-            # Extract IP from the JSON array entry
-            ip=$(echo "$entry" | grep -oP '".*"' | tr -d '"' | tr -d '[:space:]')
-            if [[ -n "$ip" ]]; then
-                ips+=("$ip")
-            fi
-        done
-    fi
-
-    ip_count=${#ips[@]}
-
-    # If the user has more IPs than allowed, block ALL their IPs
     if (( ip_count > MAX_IPS )); then
         log_message "WARN" "User $username has $ip_count IPs (max: $MAX_IPS) - blocking all IPs"
         block_all_user_ips "$username"
@@ -228,29 +157,25 @@ check_ip_limit() {
 # --- Parse log lines for connections and disconnections ---
 parse_log_line() {
     local log_line="$1"
-    local ip_address=""
-    local username=""
+    local ip_address
+    local username
 
-    # Extract IP address and username
     ip_address=$(echo "$log_line" | grep -oP '"addr": "([^:]+)' | cut -d'"' -f4)
     username=$(echo "$log_line" | grep -oP '"id": "([^">]+)' | cut -d'"' -f4)
 
     if [[ -n "$username" && -n "$ip_address" ]]; then
         if echo "$log_line" | grep -q "client connected"; then
-            # Check if this IP is in the block list
             if grep -q "^$ip_address," "$BLOCK_LIST"; then
                 log_message "WARN" "Rejected connection from blocked IP $ip_address for user $username"
-                # Make sure the IP is still blocked in iptables
                 if ! iptables -C INPUT -s "$ip_address" -j DROP 2>/dev/null; then
                     iptables -I INPUT -s "$ip_address" -j DROP
                 fi
             else
-                update_json "$username" "$ip_address"
+                add_ip_to_db "$username" "$ip_address"
                 check_ip_limit "$username"
             fi
         elif echo "$log_line" | grep -q "client disconnected"; then
-            remove_ip "$username" "$ip_address"
-            # Note: We don't unblock on disconnect - only on block expiration
+            remove_ip_from_db "$username" "$ip_address"
         fi
     fi
 }
@@ -259,9 +184,9 @@ parse_log_line() {
 install_service() {
     cat <<EOF > /etc/systemd/system/${SERVICE_NAME}
 [Unit]
-Description=Hysteria2 IP Limiter
-After=network.target hysteria-server.service
-Requires=hysteria-server.service
+Description=Hysteria2 IP Limiter (MongoDB version)
+After=network.target hysteria-server.service mongod.service
+Requires=hysteria-server.service mongod.service
 
 [Service]
 Type=simple
@@ -319,19 +244,20 @@ change_config() {
     fi
 }
 
-# --- Check if running as root ---
+# --- Startup Checks ---
 if [[ $EUID -ne 0 ]]; then
-    echo "Error: This script must be run as root for iptables functionality."
+    echo "Error: This script must be run as root."
     exit 1
 fi
-
-# --- Check for jq and warn if not available ---
+if ! command -v mongosh &>/dev/null; then
+    log_message "ERROR" "'mongosh' is not installed or not in PATH. This script requires the MongoDB Shell."
+    exit 1
+fi
 if ! command -v jq &>/dev/null; then
-    log_message "WARN" "'jq' is not installed. JSON handling may be less reliable."
-    log_message "WARN" "Consider installing jq with: apt install jq (for Debian/Ubuntu)"
+    log_message "WARN" "'jq' is not installed. JSON parsing for blocking might fail."
 fi
 
-# --- Command execution based on arguments ---
+# --- Command execution ---
 case "$1" in
     start)
         install_service
@@ -343,13 +269,9 @@ case "$1" in
         change_config "$2" "$3"
         ;;
     run)
-        log_message "INFO" "Monitoring Hysteria server connections. Max IPs per user: $MAX_IPS"
-        log_message "INFO" "Block duration: $BLOCK_DURATION seconds"
-        log_message "INFO" "Connection data saved to: $CONNECTIONS_FILE"
-        log_message "INFO" "Press Ctrl+C to exit"
+        log_message "INFO" "Monitoring Hysteria connections. Max IPs: $MAX_IPS, Block Duration: $BLOCK_DURATION s"
         log_message "INFO" "--------------------------------------------------------"
 
-        # Background process to check for expired blocks every 10 seconds
         (
             while true; do
                 check_expired_blocks
@@ -357,18 +279,14 @@ case "$1" in
             done
         ) &
         CHECKER_PID=$!
-
-        # Cleanup function
+        
         cleanup() {
             log_message "INFO" "Stopping IP limiter..."
             kill $CHECKER_PID 2>/dev/null
             exit 0
         }
-
-        # Set trap for cleanup
         trap cleanup SIGINT SIGTERM
 
-        # Monitor log for connections and disconnections
         journalctl -u hysteria-server.service -f | while read -r line; do
             if echo "$line" | grep -q "client connected\|client disconnected"; then
                 parse_log_line "$line"

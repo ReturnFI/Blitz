@@ -407,11 +407,26 @@
                 confirmButtonText: "Yes, delete them!",
             }).then((result) => {
                 if (!result.isConfirmed) return;
-                const urlTemplate = "{{ url_for('remove_user_api', username='U') }}";
-                const promises = selectedUsers.map(user => $.ajax({ url: urlTemplate.replace('U', user), method: "DELETE" }));
-                Promise.all(promises)
-                    .then(() => Swal.fire("Success!", "Selected users deleted.", "success").then(() => location.reload()))
-                    .catch(() => Swal.fire("Error!", "An error occurred while deleting users.", "error"));
+
+                if (selectedUsers.length > 1) {
+                    const bulkUrl = "{{ url_for('bulk_remove_users_api') }}";
+                    $.ajax({
+                        url: bulkUrl,
+                        method: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ usernames: selectedUsers })
+                    })
+                    .done(() => Swal.fire("Success!", "Selected users have been deleted.", "success").then(() => location.reload()))
+                    .fail((err) => Swal.fire("Error!", err.responseJSON?.detail || "An error occurred while deleting users.", "error"));
+                } else {
+                    const singleUrl = "{{ url_for('remove_user_api', username='U') }}".replace('U', selectedUsers[0]);
+                    $.ajax({
+                        url: singleUrl,
+                        method: "DELETE"
+                    })
+                    .done(() => Swal.fire("Success!", "The user has been deleted.", "success").then(() => location.reload()))
+                    .fail((err) => Swal.fire("Error!", err.responseJSON?.detail || "An error occurred while deleting the user.", "error"));
+                }
             });
         });
 

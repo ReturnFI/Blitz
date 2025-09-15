@@ -9,7 +9,7 @@ def handle_cancel_delete(call):
     bot.edit_message_text("Operation canceled.", chat_id=call.message.chat.id, message_id=call.message.message_id)
     create_main_markup(call.message)
 
-@bot.message_handler(func=lambda message: is_admin(message.from_user.id) and message.text == 'Delete User')
+@bot.message_handler(func=lambda message: is_admin(message.from_user.id) and message.text == '🗑️ Delete User')
 def delete_user(message):
     markup = types.InlineKeyboardMarkup()
     cancel_button = types.InlineKeyboardButton("❌ Cancel", callback_data="cancel_delete")

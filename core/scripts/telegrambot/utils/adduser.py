@@ -16,7 +16,7 @@ def create_cancel_markup(back_step=None):
     markup.row(types.KeyboardButton("❌ Cancel"))
     return markup
 
-@bot.message_handler(func=lambda message: is_admin(message.from_user.id) and message.text == 'Add User')
+@bot.message_handler(func=lambda message: is_admin(message.from_user.id) and message.text == '➕ Add User')
 def add_user(message):
     msg = bot.reply_to(message, "Enter username (only letters, numbers, and underscores are allowed):", reply_markup=create_cancel_markup())
     bot.register_next_step_handler(msg, process_add_user_step1)
