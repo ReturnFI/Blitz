@@ -13,7 +13,7 @@ from urllib.parse import quote
 
 from aiohttp import web
 from aiohttp.web_middlewares import middleware
-from urllib.parse import unquote, parse_qs, urlparse, urljoin
+from urllib.parse import unquote, parse_qs, urlparse, urljoin, quote
 from dotenv import load_dotenv
 import qrcode
 from jinja2 import Environment, FileSystemLoader
@@ -128,11 +128,14 @@ class TemplateContext:
     expiration_date: str
     sublink_qrcode: str
     sub_link: str
-    singbox_qrcode: str
-    singbox_link: str
+    sub_link_encoded: str
     blocked: bool = False
     local_uris: List[NodeURI] = field(default_factory=list)
     node_uris: List[NodeURI] = field(default_factory=list)
+    singbox_qrcode: Optional[str] = None
+    hiddify_qrcode: Optional[str] = None
+    streisand_qrcode: Optional[str] = None
+    nekobox_qrcode: Optional[str] = None
 
 
 class Utils:
@@ -401,14 +404,14 @@ class SubscriptionManager:
             f"total={user_info.max_download_bytes}; "
             f"expire={user_info.expiration_timestamp}\n"
         )
-        profile_lines = f"//profile-title: {username}-Hysteria2 🚀\n//profile-update-interval: 1\n"
+        profile_lines = f"//profile-title: {username}-Blitz ⚡\n//profile-update-interval: 1\n"
         return profile_lines + subscription_info + "\n".join(all_processed_uris)
 
 
 class TemplateRenderer:
     def __init__(self, template_dir: str, config: AppConfig):
         self.env = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
-        self.html_template = self.env.get_template('template.html')
+        self.html_template = self.env.get_template('index.html')
         self.config = config
 
     def render(self, context: TemplateContext) -> str:
@@ -433,6 +436,8 @@ class HysteriaServer:
         safe_subpath = self.validate_and_escape_subpath(self.config.subpath)
 
         base_path = f'/{safe_subpath}'
+        self.app.router.add_get(f'{base_path}/sub/normal/style.css', self.handle_style)
+        self.app.router.add_get(f'{base_path}/sub/normal/script.js', self.handle_script)
         self.app.router.add_get(f'{base_path}/sub/normal/{{password_token}}', self.handle)
         self.app.router.add_get(f'{base_path}/robots.txt', self.robots_handler)
         self.app.router.add_route('*', f'{base_path}/{{tail:.*}}', self.handle_404_subpath)
@@ -455,7 +460,7 @@ class HysteriaServer:
         extra_config_path = '/etc/hysteria/extra.json'
         rate_limit = 100
         rate_limit_window = 60
-        template_dir = os.path.dirname(__file__)
+        template_dir = os.path.join(os.path.dirname(__file__), 'template')
 
         sni = self._load_sni_from_env(sni_file)
         return AppConfig(domain=domain, external_port=external_port,
@@ -568,8 +573,7 @@ class HysteriaServer:
             expiration_date=user_info.expiration_date,
             sublink_qrcode="",
             sub_link="#blocked",
-            singbox_qrcode="",
-            singbox_link="#blocked",
+            sub_link_encoded="",
             blocked=True,
             local_uris=[
                 NodeURI(
@@ -608,15 +612,14 @@ class HysteriaServer:
             print(f"Warning: Constructed base URL '{base_url}' might be invalid. Check domain and port config.")
         
         sub_link = f"{base_url}/{self.config.subpath}/sub/normal/{user_info.password}"
+        sub_link_encoded = quote(sub_link, safe='')
         sublink_qrcode = Utils.generate_qrcode_base64(sub_link)
         
-        # Generate sing-box import URL format
-        # sing-box://import-remote-profile?url=<URL-ENCODED-remote-config-url>#<URL-ENCODED-profile-name>
-        encoded_sub_link = quote(sub_link, safe='')
-        encoded_username = quote(username, safe='')
-        singbox_import_url = f"sing-box://import-remote-profile?url={encoded_sub_link}#{encoded_username}"
-        singbox_qrcode = Utils.generate_qrcode_base64(singbox_import_url)
-
+        singbox_qrcode = Utils.generate_qrcode_base64(f"sing-box://import-remote-profile?url={sub_link_encoded}")
+        hiddify_qrcode = Utils.generate_qrcode_base64(f"hiddify://import/{sub_link_encoded}")
+        streisand_qrcode = Utils.generate_qrcode_base64(f"streisand://import/sub?url={sub_link_encoded}")
+        nekobox_qrcode = Utils.generate_qrcode_base64(f"nekobox://import?url={sub_link_encoded}")
+        
         local_uris = []
         node_uris = []
 
@@ -638,11 +641,14 @@ class HysteriaServer:
             expiration_date=user_info.expiration_date,
             sublink_qrcode=sublink_qrcode,
             sub_link=sub_link,
-            singbox_qrcode=singbox_qrcode,
-            singbox_link=singbox_import_url,
+            sub_link_encoded=sub_link_encoded,
             blocked=user_info.blocked,
             local_uris=local_uris,
-            node_uris=node_uris
+            node_uris=node_uris,
+            singbox_qrcode=singbox_qrcode,
+            hiddify_qrcode=hiddify_qrcode,
+            streisand_qrcode=streisand_qrcode,
+            nekobox_qrcode=nekobox_qrcode
         )
 
     async def robots_handler(self, request: web.Request) -> web.Response:
@@ -651,6 +657,12 @@ class HysteriaServer:
     async def handle_404_subpath(self, request: web.Request) -> web.Response:
         print(f"404 Not Found (within subpath, unhandled by specific routes): {request.path}")
         return web.Response(status=404, text="Not Found within Subpath")
+    
+    async def handle_style(self, request: web.Request) -> web.Response:
+        return web.FileResponse(os.path.join(self.config.template_dir, 'style.css'))
+
+    async def handle_script(self, request: web.Request) -> web.Response:
+        return web.FileResponse(os.path.join(self.config.template_dir, 'script.js'))
 
     def run(self):
         print(f"Starting Hysteria Normalsub server on {self.config.aiohttp_listen_address}:{self.config.aiohttp_listen_port}")
