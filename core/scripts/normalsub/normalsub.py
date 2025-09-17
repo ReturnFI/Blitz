@@ -9,7 +9,6 @@ import sys
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from io import BytesIO
-from urllib.parse import quote
 
 from aiohttp import web
 from aiohttp.web_middlewares import middleware
