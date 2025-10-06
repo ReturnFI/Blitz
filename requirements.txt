@@ -6,7 +6,7 @@ attrs==25.3.0
 certifi==2025.7.14
 charset-normalizer==3.4.3
 click==8.1.8
-frozenlist==1.7.0
+frozenlist==1.8.0
 idna==3.10
 multidict==6.6.4
 pillow==11.3.0
