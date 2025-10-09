@@ -10,7 +10,7 @@ frozenlist==1.7.0
 idna==3.10
 multidict==6.6.4
 pillow==11.3.0
-propcache==0.3.2
+propcache==0.4.1
 psutil==7.1.0
 pypng==0.20220715.0
 pyTelegramBotAPI==4.29.1
