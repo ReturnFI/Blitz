@@ -28,7 +28,7 @@ pymongo==4.15.2
 # webpanel
 annotated-types==0.7.0
 anyio==4.11.0
-fastapi==0.118.0
+fastapi==0.119.0
 h11==0.16.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
