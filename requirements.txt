@@ -4,7 +4,7 @@ aiosignal==1.4.0
 async-timeout==5.0.1
 attrs==25.3.0
 certifi==2025.10.5
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
 click==8.1.8
 frozenlist==1.8.0
 idna==3.10
