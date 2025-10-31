@@ -5,7 +5,7 @@ async-timeout==5.0.1
 attrs==25.3.0
 certifi==2025.10.5
 charset-normalizer==3.4.3
-click==8.1.8
+click==8.3.0
 frozenlist==1.8.0
 idna==3.10
 multidict==6.7.0
