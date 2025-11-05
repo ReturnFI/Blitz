@@ -134,9 +134,9 @@ def process_show_user(message):
         parse_mode="Markdown"
     )
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('edit_') or call.data.startswith('renew_') or call.data.startswith('block_') or call.data.startswith('reset_') or call.data.startswith('ipv6_'))
+@bot.callback_query_handler(func=lambda call: call.data.startswith(('edit_', 'renew_', 'block_', 'reset_', 'ipv6_', 'set_new_note', 'clear_note')))
 def handle_edit_callback(call):
-    action, username = call.data.split(':')
+    action, username = call.data.split(':', 1)
     display_username = escape_markdown(username)
 
     if action == 'edit_username':
@@ -149,7 +149,6 @@ def handle_edit_callback(call):
         msg = bot.send_message(call.message.chat.id, f"Enter new expiration days for {display_username}:")
         bot.register_next_step_handler(msg, process_edit_expiration, username)
     elif action == 'edit_note':
-        # Get current user details to show current note
         command = f"python3 {CLI_PATH} get-user -u \"{username}\""
         user_result = run_cli_command(command)
         current_note = ""
@@ -158,12 +157,24 @@ def handle_edit_callback(call):
             current_note = user_details.get('note', '')
         except json.JSONDecodeError:
             pass
+
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("✏️ Set New Note", callback_data=f"set_new_note:{username}"))
+        markup.add(types.InlineKeyboardButton("🗑️ Clear Note", callback_data=f"clear_note:{username}"))
         
+        message_text = f"Select an action for the note of {display_username}:"
         if current_note:
-            msg = bot.send_message(call.message.chat.id, f"Current note for {display_username}: `{escape_markdown(current_note)}`\n\nEnter new note (or type 'clear' to remove):", parse_mode="Markdown")
-        else:
-            msg = bot.send_message(call.message.chat.id, f"Enter new note for {display_username} (or type 'clear' to remove):")
+            message_text = f"Current note for {display_username}: `{escape_markdown(current_note)}`\n\nSelect an action:"
+        
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+        bot.send_message(call.message.chat.id, message_text, reply_markup=markup, parse_mode="Markdown")
+    elif action == 'set_new_note':
+        msg = bot.edit_message_text(f"Enter new note for {display_username}:", call.message.chat.id, call.message.message_id)
         bot.register_next_step_handler(msg, process_edit_note, username)
+    elif action == 'clear_note':
+        command = f"python3 {CLI_PATH} edit-user -u \"{username}\" --note \"\""
+        result = run_cli_command(command)
+        bot.edit_message_text(result, chat_id=call.message.chat.id, message_id=call.message.message_id)
     elif action == 'renew_password':
         command = f"python3 {CLI_PATH} edit-user -u \"{username}\" -rp"
         result = run_cli_command(command)
@@ -203,11 +214,11 @@ def handle_edit_callback(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('confirm_block:'))
 def handle_block_confirmation(call):
-    _, username, block_status = call.data.split(':')
+    _, username, block_status = call.data.split(':', 2)
     flag = '-b' if block_status == 'true' else '--unblocked'
     command = f"python3 {CLI_PATH} edit-user -u \"{username}\" {flag}"
     result = run_cli_command(command)
-    bot.send_message(call.message.chat.id, result)
+    bot.edit_message_text(result, call.message.chat.id, call.message.message_id)
 
 def process_edit_username(message, username):
     new_username = message.text.strip()
@@ -236,18 +247,12 @@ def process_edit_expiration(message, username):
 def process_edit_note(message, username):
     note_input = message.text.strip()
     
-    if note_input.lower() == 'clear':
-        # Clear the note
-        command = f"python3 {CLI_PATH} edit-user -u \"{username}\" --note \"\""
-    else:
-        # Validate note length
-        if len(note_input) > 200:
-            bot.reply_to(message, "Note is too long (max 200 characters). Please enter a shorter note:")
-            bot.register_next_step_handler(message, process_edit_note, username)
-            return
+    if len(note_input) > 200:
+        bot.reply_to(message, "Note is too long (max 200 characters). Please enter a shorter note:")
+        bot.register_next_step_handler(message, process_edit_note, username)
+        return
         
-        # Update with new note
-        command = f"python3 {CLI_PATH} edit-user -u \"{username}\" --note \"{note_input}\""
+    command = f"python3 {CLI_PATH} edit-user -u \"{username}\" --note \"{note_input}\""
     
     result = run_cli_command(command)
     bot.reply_to(message, result)
