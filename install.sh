@@ -30,25 +30,25 @@ EOF
 }
 
 log_info() {
-    local msg = "$1"
+    local msg="$1"
     echo -e "${BLUE}${INFO_MARK} $msg ${NC}"
     echo "${INFO_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
 log_success() {
-    local msg = "$1"
+    local msg="$1"
     echo -e "${GREEN}${CHECK_MARK} $msg${NC}"
     echo "${CHECK_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
 log_warning() {
-    local msg = "$1"
+    local msg="$1"
     echo -e "${YELLOW}${WARNING_MARK} ${1}${NC}"
     echo "${WARNING_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
 log_error() {
-    local msg = "$1"
+    local msg="$1"
     echo -e "${RED}${CROSS_MARK} ${1}${NC}" >&2
     echo "${CROSS_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
