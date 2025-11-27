@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -20,9 +20,9 @@ init_logging() {
 ===================================================================
             Blitz Installer $installer_version
 ===================================================================
-Started: $date '+%Y-%m-%d %H:%M:%S')
+Started: $(date '+%Y-%m-%d %H:%M:%S')
 Hostname: $(hostname)
-OS: $(grep "PRETTY_NAME" /etc/os-release | cur -d'"' -f2 2>/dev/null || echo "Unknown")
+OS: $(grep "PRETTY_NAME" /etc/os-release | cut -d'"' -f2 2>/dev/null || echo "Unknown")
 ===================================================================
 
 EOF
@@ -43,13 +43,13 @@ log_success() {
 
 log_warning() {
     local msg="$1"
-    echo -e "${YELLOW}${WARNING_MARK} ${1}${NC}"
+    echo -e "${YELLOW}${WARNING_MARK} $msg${NC}"
     echo "${WARNING_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
 log_error() {
     local msg="$1"
-    echo -e "${RED}${CROSS_MARK} ${1}${NC}" >&2
+    echo -e "${RED}${CROSS_MARK} $msg${NC}" >&2
     echo "${CROSS_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
@@ -301,8 +301,9 @@ main() {
 
     source ~/.bashrc &> /dev/null || true
 
+    local i=0
     echo ""
-    while [ i -lt 3 ]; do
+    while [ $i -lt 3 ]; do
         echo -ne "\r${YELLOW}Starting Blitz in ${RED}$((3-i)) seconds...${NC}"
         sleep 1
         ((i++))
