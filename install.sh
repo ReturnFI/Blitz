@@ -12,20 +12,45 @@ CROSS_MARK="[✗]"
 INFO_MARK="[i]"
 WARNING_MARK="[!]"
 
+readonly LOG_FILE="/tmp/.blitz_install_$$.txt"
+
+init_logging() {
+    local installer_version=$(cat VERSION)
+    cat > "$LOG_FILE" <<EOF
+===================================================================
+            Blitz Installer $installer_version
+===================================================================
+Started: $date '+%Y-%m-%d %H:%M:%S')
+Hostname: $(hostname)
+OS: $(grep "PRETTY_NAME" /etc/os-release | cur -d'"' -f2 2>/dev/null || echo "Unknown")
+===================================================================
+
+EOF
+    chmod 600 "$LOG_FILE"
+}
+
 log_info() {
-    echo -e "${BLUE}${INFO_MARK} ${1}${NC}"
+    local msg = "$1"
+    echo -e "${BLUE}${INFO_MARK} $msg ${NC}"
+    echo "${INFO_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
 log_success() {
-    echo -e "${GREEN}${CHECK_MARK} ${1}${NC}"
+    local msg = "$1"
+    echo -e "${GREEN}${CHECK_MARK} $msg${NC}"
+    echo "${CHECK_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
 log_warning() {
+    local msg = "$1"
     echo -e "${YELLOW}${WARNING_MARK} ${1}${NC}"
+    echo "${WARNING_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
 log_error() {
+    local msg = "$1"
     echo -e "${RED}${CROSS_MARK} ${1}${NC}" >&2
+    echo "${CROSS_MARK} $(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
 }
 
 handle_error() {
@@ -47,32 +72,24 @@ check_os_version() {
     local os_name os_version
 
     log_info "Checking OS compatibility..."
-    
+
     if [ -f /etc/os-release ]; then
-        os_name=$(grep '^ID=' /etc/os-release | cut -d= -f2)
-        os_version=$(grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+        . /etc/os-release
+        os_name=$(echo "$ID")
+        os_version=$(echo "$VERSION_ID" | awk -F '.' '{print $1}')
     else
         log_error "Unsupported OS or unable to determine OS version."
         exit 1
     fi
 
-    if ! command -v bc &> /dev/null; then
-        log_info "Installing bc package..."
-        apt update -qq && apt install -y -qq bc
-        if [ $? -ne 0 ]; then
-            log_error "Failed to install bc package."
-            exit 1
-        fi
-    fi
-
-    if [[ "$os_name" == "ubuntu" && $(echo "$os_version >= 22" | bc) -eq 1 ]] ||
-       [[ "$os_name" == "debian" && $(echo "$os_version >= 12" | bc) -eq 1 ]]; then
+    if [[ "$os_name" == "ubuntu" && "$os_version" -ge 22 ]] ||
+       [[ "$os_name" == "debian" && "$os_version" -ge 12 ]]; then
         log_success "OS check passed: $os_name $os_version"
     else
         log_error "This script is only supported on Ubuntu 22+ or Debian 12+."
         exit 1
     fi
-    
+
     log_info "Checking CPU for AVX support (required for MongoDB)..."
     if grep -q -m1 -o -E 'avx|avx2|avx512' /proc/cpuinfo; then
         log_success "CPU supports AVX instruction set."
@@ -89,14 +106,14 @@ check_os_version() {
 
 install_mongodb() {
     log_info "Installing MongoDB..."
-    
+
     if command -v mongod &> /dev/null; then
         log_success "MongoDB is already installed"
         return 0
     fi
-    
+
     curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
-    
+
     local codename
     codename=$(lsb_release -cs)
     local repo_line=""
@@ -115,13 +132,13 @@ install_mongodb() {
     esac
 
     echo "$repo_line" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list > /dev/null
-    
+
     apt update -qq
     apt install -y -qq mongodb-org
-    
+
     systemctl enable mongod
     systemctl start mongod
-    
+
     if systemctl is-active --quiet mongod; then
         log_success "MongoDB installed and started successfully"
     else
@@ -134,9 +151,9 @@ install_mongodb() {
 install_packages() {
     local REQUIRED_PACKAGES=("jq" "curl" "pwgen" "python3" "python3-pip" "python3-venv" "bc" "zip" "unzip" "lsof" "gnupg" "lsb-release")
     local MISSING_PACKAGES=()
-    
+
     log_info "Checking required packages..."
-    
+
     for package in "${REQUIRED_PACKAGES[@]}"; do
         if ! command -v "$package" &> /dev/null && ! dpkg -l | grep -q "^ii.*$package "; then
             MISSING_PACKAGES+=("$package")
@@ -149,7 +166,7 @@ install_packages() {
         log_info "Installing missing packages: ${MISSING_PACKAGES[*]}"
         apt update -qq || { log_error "Failed to update apt repositories"; exit 1; }
         apt upgrade -y -qq || { log_warning "Failed to upgrade packages, continuing..."; }
-        
+
         for package in "${MISSING_PACKAGES[@]}"; do
             log_info "Installing $package..."
             if apt install -y -qq "$package"; then
@@ -162,7 +179,7 @@ install_packages() {
     else
         log_success "All required packages are already installed."
     fi
-    
+
     install_mongodb
 }
 
@@ -212,10 +229,10 @@ download_and_extract_release() {
         log_error "Failed to extract the archive."
         exit 1
     fi
-    
+
     rm "$temp_zip"
     log_info "Cleaned up temporary file."
-    
+
     local auth_binary="/etc/hysteria/core/scripts/auth/user_auth"
     if [ -f "$auth_binary" ]; then
         chmod +x "$auth_binary"
@@ -227,18 +244,18 @@ download_and_extract_release() {
 
 setup_python_env() {
     log_info "Setting up Python virtual environment..."
-    
+
     cd /etc/hysteria || { log_error "Failed to change to /etc/hysteria directory"; exit 1; }
-    
+
     if python3 -m venv hysteria2_venv &> /dev/null; then
         log_success "Created Python virtual environment"
     else
         log_error "Failed to create Python virtual environment"
         exit 1
     fi
-    
+
     source /etc/hysteria/hysteria2_venv/bin/activate || { log_error "Failed to activate virtual environment"; exit 1; }
-    
+
     log_info "Installing Python requirements..."
     if pip install -r requirements.txt &> /dev/null; then
         log_success "Installed Python requirements"
@@ -250,7 +267,7 @@ setup_python_env() {
 
 add_alias() {
     log_info "Adding 'hys2' alias to .bashrc..."
-    
+
     if ! grep -q "alias hys2='source /etc/hysteria/hysteria2_venv/bin/activate && /etc/hysteria/menu.sh'" ~/.bashrc; then
         echo "alias hys2='source /etc/hysteria/hysteria2_venv/bin/activate && /etc/hysteria/menu.sh'" >> ~/.bashrc
         log_success "Added 'hys2' alias to .bashrc"
@@ -261,10 +278,10 @@ add_alias() {
 
 run_menu() {
     log_info "Preparing to run menu..."
-    
+
     cd /etc/hysteria || { log_error "Failed to change to /etc/hysteria directory"; exit 1; }
     chmod +x menu.sh || { log_error "Failed to make menu.sh executable"; exit 1; }
-    
+
     log_info "Starting menu..."
     echo -e "\n${BOLD}${GREEN}======== Launching Blitz Menu ========${NC}\n"
     ./menu.sh
@@ -272,19 +289,25 @@ run_menu() {
 
 main() {
     echo -e "\n${BOLD}${BLUE}======== Blitz Setup Script ========${NC}\n"
-    
+    log_info "Log File is ${LOG_FILE}"
+    init_logging
+
     check_root
     check_os_version
     install_packages
     download_and_extract_release
     setup_python_env
     add_alias
-    
+
     source ~/.bashrc &> /dev/null || true
-    
-    echo -e "\n${YELLOW}Starting Blitz in 3 seconds...${NC}"
-    sleep 3
-    
+
+    echo ""
+    while [ i -lt 3 ]; do
+        echo -ne "\r${YELLOW}Starting Blitz in ${RED}$((3-i)) seconds...${NC}"
+        sleep 1
+        ((i++))
+    done
+
     run_menu
 }
 
