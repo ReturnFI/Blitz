@@ -15,7 +15,7 @@ WARNING_MARK="[!]"
 readonly LOG_FILE="/tmp/.blitz_install_$$.txt"
 
 init_logging() {
-    local installer_version=$(cat VERSION)
+    local installer_version=2.4.9
     cat > "$LOG_FILE" <<EOF
 ===================================================================
             Blitz Installer $installer_version
