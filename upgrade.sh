@@ -189,6 +189,17 @@ for SERVICE in "${ALL_SERVICES[@]}"; do
     fi
 done
 
+# ========== Check for existing upgrade process ==========
+if [ -f "/tmp/hysteria_upgrade.lock" ]; then
+    info "Found existing upgrade lock file. This might be from a previous interrupted upgrade."
+    info "Removing lock file to allow this upgrade to proceed..."
+    rm -f /tmp/hysteria_upgrade.lock
+fi
+
+# ========== Create new lock file ==========
+echo $$ > /tmp/hysteria_upgrade.lock
+info "Upgrade process started. PID: $$"
+
 # ========== Check AVX Support Prerequisite ==========
 check_avx_support
 
@@ -333,4 +344,10 @@ fi
 info "Upgrade process finished. Launching menu..."
 cd "$HYSTERIA_INSTALL_DIR"
 chmod +x menu.sh
+
+# ========== Cleanup ==========
+info "Cleaning up upgrade lock file..."
+rm -f /tmp/hysteria_upgrade.lock
+success "Upgrade lock file removed."
+
 ./menu.sh
