@@ -12,7 +12,7 @@
         </td>
         <td>{{ loop.index + (offset if offset is defined else 0) }}</td>
         <td data-username="{{ user.username }}">{{ user.username }}</td>
-        <td class="d-none d-md-table-cell">
+        <td class="d-none d-md-table-cell status-cell">
             {% if user.status == "Online" %}
                 <i class="fas fa-circle text-success"></i> Online
                 {% if user.online_count and user.online_count > 0 %}
@@ -28,11 +28,10 @@
                 <i class="fas fa-circle text-danger"></i> {{ user.status }}
             {% endif %}
         </td>
-        <td class="d-none d-md-table-cell">{{ user.traffic_used }}</td>
-        <td class="d-none d-md-table-cell">{{ user.expiry_date }}</td>
-        <td class="d-none d-md-table-cell">{{ user.expiry_days }}</td>
-        <td class="d-none d-md-table-cell">{{ user.day_usage }}</td>
-        <td class="d-none d-md-table-cell">
+        <td class="d-none d-md-table-cell traffic-cell">{{ user.traffic_used }}</td>
+        <td class="d-none d-md-table-cell usage-days-cell">{{ user.usage_days_display }}</td>
+        <td class="d-none d-md-table-cell expiry-date-cell">{{ user.expiry_date }}</td>
+        <td class="d-none d-md-table-cell enable-cell">
             {% if user.enable %}
             <i class="fas fa-check-circle text-success"></i>
             {% else %}
@@ -100,9 +99,8 @@
                     </span>
                 </p>
                 <p><strong>Traffic Usage:</strong> <span>{{ user.traffic_used }}</span></p>
+                <p><strong>Day Usage:</strong> <span>{{ user.usage_days_display }}</span></p>
                 <p><strong>Expiry Date:</strong> <span>{{ user.expiry_date }}</span></p>
-                <p><strong>Expiry Days:</strong> <span>{{ user.expiry_days }}</span></p>
-                <p><strong>Day Usage:</strong> <span>{{ user.day_usage }}</span></p>
                 <p><strong>Note:</strong> <span>{{ user.note or 'N/A' }}</span></p>
                 <p><strong>Enable:</strong>
                     <span>

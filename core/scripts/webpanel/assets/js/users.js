@@ -180,10 +180,10 @@ $(function () {
         $("#userTable tbody tr.user-main-row").each(function () {
             let showRow;
             switch (filter) {
-                case "on-hold":    showRow = $(this).find("td:eq(3) i").hasClass("text-warning"); break;
-                case "online":     showRow = $(this).find("td:eq(3) i").hasClass("text-success"); break;
-                case "enable":     showRow = $(this).find("td:eq(8) i").hasClass("text-success"); break;
-                case "disable":    showRow = $(this).find("td:eq(8) i").hasClass("text-danger"); break;
+                case "on-hold":    showRow = $(this).find("td.status-cell i").hasClass("text-warning"); break;
+                case "online":     showRow = $(this).find("td.status-cell i").hasClass("text-success"); break;
+                case "enable":     showRow = $(this).find("td.enable-cell i").hasClass("text-success"); break;
+                case "disable":    showRow = $(this).find("td.enable-cell i").hasClass("text-danger"); break;
                 default:           showRow = true;
             }
             $(this).toggle(showRow).find(".user-checkbox").prop("checked", false);
@@ -278,10 +278,11 @@ $(function () {
         const dataRow = $(event.relatedTarget).closest("tr.user-main-row");
         const url = GET_USER_URL_TEMPLATE.replace('U', user);
 
-        const trafficText = dataRow.find("td:eq(4)").text();
-        const expiryText = dataRow.find("td:eq(6)").text();
+        const trafficText = dataRow.find("td.traffic-cell").text();
+        const usageDaysText = dataRow.find("td.usage-days-cell").text();
+        const expiryText = usageDaysText.split('/')[1] || "0";
         const note = dataRow.data('note');
-        const statusText = dataRow.find("td:eq(3)").text().trim();
+        const statusText = dataRow.find("td.status-cell").text().trim();
         
         $('#editPasswordError').text('');
         $('#editExpirationDaysError').text('');
@@ -298,7 +299,7 @@ $(function () {
         }
         
         $("#editNote").val(note || '');
-        $("#editBlocked").prop("checked", !dataRow.find("td:eq(8) i").hasClass("text-success"));
+        $("#editBlocked").prop("checked", !dataRow.find("td.enable-cell i").hasClass("text-success"));
         $("#editUnlimitedIp").prop("checked", dataRow.find(".unlimited-ip-cell i").hasClass("text-primary"));
     
         const passwordInput = $("#editPassword");
