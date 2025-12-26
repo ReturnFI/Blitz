@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[1;94m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 BOLD='\033[1m'
 
@@ -12,20 +13,35 @@ CROSS_MARK="[✗]"
 INFO_MARK="[i]"
 WARNING_MARK="[!]"
 
+LOG_FILE="/tmp/.Blitz_install_$$"
+
+log_init() {
+    echo "=================================" > "$LOG_FILE"
+    echo "   Log file created at $(date)" >> "$LOG_FILE"
+    echo "=================================" >> "$LOG_FILE"
+    echo "" >> "$LOG_FILE"
+    chmod 644 "$LOG_FILE"
+}
+
 log_info() {
     echo -e "${BLUE}${INFO_MARK} ${1}${NC}"
+    echo "[INFO] $1" >> "$LOG_FILE"
 }
 
 log_success() {
     echo -e "${GREEN}${CHECK_MARK} ${1}${NC}"
+    echo "[ OK ] $1" >> "$LOG_FILE"
+    echo "" >> "$LOG_FILE"
 }
 
 log_warning() {
     echo -e "${YELLOW}${WARNING_MARK} ${1}${NC}"
+    echo "[WARN] $1" >> "$LOG_FILE"
 }
 
 log_error() {
     echo -e "${RED}${CROSS_MARK} ${1}${NC}" >&2
+    echo "[ERROR] $1" >> "$LOG_FILE"
 }
 
 handle_error() {
@@ -272,19 +288,33 @@ run_menu() {
 
 main() {
     echo -e "\n${BOLD}${BLUE}======== Blitz Setup Script ========${NC}\n"
-    
+    log_init
+
     check_root
     check_os_version
     install_packages
     download_and_extract_release
     setup_python_env
     add_alias
-    
+
     source ~/.bashrc &> /dev/null || true
-    
+
+    echo -e "\n${CYAN}Installation logs can be found at: ${LOG_FILE}${NC}\n"
+    echo -e "${CYAN}Press ${YELLOW}${BOLD}ENTER${NC}${CYAN} to continue...${NC}"
+    read -r
     echo -e "\n${YELLOW}Starting Blitz in 3 seconds...${NC}"
-    sleep 3
-    
+    for i in {3..1};
+    do
+        if [ $i -eq 1 ]; then
+            echo -ne "${RED}$i second left...${NC}\r"
+        else
+            echo -ne "${YELLOW}$i seconds left...${NC}\r"
+        fi
+        sleep 1
+    done
+
+    echo -ne "\r\033[KSetup complete! Starting menu!"
+    sleep 2
     run_menu
 }
 
