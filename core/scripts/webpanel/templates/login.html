@@ -4,11 +4,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Blitz Dashboard - Login</title>
+    <title>Blitz Panel - Login</title>
+    
+    <!-- Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         * {
             margin: 0;
@@ -18,7 +23,8 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 25%, #1e3c72 50%, #2a5298 75%, #1e3c72 100%);
+            /* Deep Blue Dark Theme Background */
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -27,83 +33,68 @@
             justify-content: center;
             position: relative;
             overflow: hidden;
-            padding: 16px;
+            color: #fff;
         }
 
+        /* Ambient Light Blobs */
         body::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
-            animation: float 20s ease-in-out infinite;
+            top: -10%;
+            left: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+            animation: float 10s ease-in-out infinite alternate;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+            animation: float 12s ease-in-out infinite alternate-reverse;
         }
 
         @keyframes gradientShift {
-            0%, 100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         @keyframes float {
-            0%, 100% {
-                transform: translate(0px, 0px) rotate(0deg);
-            }
-            33% {
-                transform: translate(30px, -30px) rotate(120deg);
-            }
-            66% {
-                transform: translate(-20px, 20px) rotate(240deg);
-            }
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(30px, 30px); }
         }
 
         .login-container {
-            background: rgba(255, 255, 255, 0.95);
+            /* Glass Effect */
+            background: rgba(30, 41, 59, 0.6); /* Slate-800 with opacity */
             backdrop-filter: blur(20px);
-            border-radius: 20px;
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            
+            border-radius: 24px;
             padding: 48px 40px;
             width: 100%;
-            max-width: 400px;
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.15),
-                0 0 0 1px rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 420px;
             position: relative;
-            z-index: 1;
-            animation: slideUp 0.8s ease-out;
+            z-index: 10;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @media (max-width: 480px) {
             .login-container {
                 padding: 32px 24px;
-                border-radius: 16px;
-                margin: 0 16px;
-            }
-        }
-
-        @media (max-width: 320px) {
-            .login-container {
-                padding: 24px 20px;
+                margin: 16px;
             }
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .logo {
@@ -111,85 +102,89 @@
             margin-bottom: 32px;
         }
 
+        .logo i {
+            font-size: 48px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
         .logo h1 {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
-            color: #1a1a1a;
+            color: #fff;
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         .logo p {
-            color: #6b7280;
-            font-size: 16px;
-            font-weight: 400;
-        }
-
-        @media (max-width: 480px) {
-            .logo {
-                margin-bottom: 24px;
-            }
-            
-            .logo h1 {
-                font-size: 28px;
-            }
-            
-            .logo p {
-                font-size: 14px;
-            }
+            color: #94a3b8; /* Slate-400 */
+            font-size: 15px;
         }
 
         .error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 24px;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            position: relative;
         }
 
-        @media (max-width: 480px) {
-            .form-group {
-                margin-bottom: 20px;
-            }
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #1e3c72;
-            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
-            transform: translateY(-2px);
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1; /* Slate-300 */
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .form-input {
             width: 100%;
-            padding: 16px;
-            border: 2px solid #e5e7eb;
+            padding: 14px 16px 14px 44px; /* Left padding for icon */
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            font-size: 16px;
+            font-size: 15px;
+            color: #fff;
             transition: all 0.3s ease;
-            background: #ffffff;
+            font-family: 'Inter', sans-serif;
         }
 
-        @media (max-width: 480px) {
-            .form-input {
-                padding: 14px;
-                font-size: 16px;
-            }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
         }
 
-        .form-input::placeholder {
-            color: #9ca3af;
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 40px; /* Adjust based on label height */
+            color: #64748b;
+            transition: color 0.3s;
+        }
+        
+        .form-input:focus + .input-icon {
+            color: #3b82f6;
         }
 
         .submit-btn {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
             border: none;
             border-radius: 12px;
@@ -197,45 +192,13 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        @media (max-width: 480px) {
-            .submit-btn {
-                padding: 14px;
-            }
-        }
-
-        @media (hover: hover) {
-            .submit-btn:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 15px 30px rgba(30, 60, 114, 0.4);
-            }
-            
-            .submit-btn:hover::before {
-                left: 100%;
-            }
-        }
-
-        .submit-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .submit-btn:hover::before {
-            left: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
         .submit-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(30, 60, 114, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
         }
 
         .submit-btn:active {
@@ -246,37 +209,20 @@
             text-align: center;
             margin-top: 32px;
             font-size: 14px;
-            color: #6b7280;
-        }
-
-        @media (max-width: 480px) {
-            .footer {
-                margin-top: 24px;
-                font-size: 13px;
-            }
+            color: #64748b;
         }
 
         .footer a {
-            color: #1e3c72;
+            color: #94a3b8;
             text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
             font-size: 20px;
-            display: inline-block;
             margin-top: 8px;
+            display: inline-block;
+            transition: color 0.3s;
         }
 
-        @media (hover: hover) {
-            .footer a:hover {
-                color: #2a5298;
-                transform: scale(1.1);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .footer a {
-                font-size: 18px;
-            }
+        .footer a:hover {
+            color: #3b82f6;
         }
     </style>
 </head>
@@ -284,26 +230,38 @@
 <body>
     <div class="login-container">
         <div class="logo">
-            <h1>Blitz</h1>
-            <p>Welcome back</p>
+            <i class="fas fa-bolt"></i>
+            <h1>Blitz Panel</h1>
+            <p>Welcome back, please sign in.</p>
         </div>
 
-        {% if error %}
-        <div class="error-message">{{ error }}</div>
-        {% endif %}
+        <!-- Error Placeholder (Uncomment if needed in template logic) -->
+        <!-- {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %} -->
 
-        <form action="{{ url_for('login') }}" method="post">
+        <form action="#" method="post"> <!-- Change action to login route -->
             <div class="form-group">
-                <input type="text" name="username" class="form-input" placeholder="Username" required>
+                <label>Username</label>
+                <input type="text" name="username" class="form-input" placeholder="Enter your username" required>
+                <i class="fas fa-user input-icon"></i>
             </div>
+            
             <div class="form-group">
-                <input type="password" name="password" class="form-input" placeholder="Password" required>
+                <label>Password</label>
+                <input type="password" name="password" class="form-input" placeholder="Enter your password" required>
+                <i class="fas fa-lock input-icon"></i>
             </div>
+            
             <button type="submit" class="submit-btn">Sign In</button>
         </form>
 
         <div class="footer">
-            Made with ❤️<br>
+            Made with ❤️ by Blitz Team
+            <br>
             <a href="https://github.com/ReturnFI/Blitz/" target="_blank">
                 <i class="fab fa-github"></i>
             </a>
@@ -313,7 +271,7 @@
     <script>
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
-                const form = document.querySelector('form[action]');
+                const form = document.querySelector('form');
                 if (form) {
                     event.preventDefault();
                     form.submit();
