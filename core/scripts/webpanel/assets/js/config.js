@@ -1,95 +1,65 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const mainContent = document.querySelector('.content-wrapper > div');
-    const GET_FILE_URL = mainContent.dataset.getFileUrl;
-    const SET_FILE_URL = mainContent.dataset.setFileUrl;
+document.addEventListener("DOMContentLoaded", function () {
 
-    const saveButton = document.getElementById("save-button");
-    const restoreButton = document.getElementById("restore-button");
-    const container = document.getElementById("jsoneditor");
+    const container = document.querySelector("[data-get-file-url]");
+    if (!container) return;
 
-    const editor = new JSONEditor(container, {
-        mode: "code",
-        onChange: validateJson
+    const getFileUrl = container.dataset.getFileUrl;
+    const setFileUrl = container.dataset.setFileUrl;
+
+    const editorContainer = document.getElementById("jsoneditor");
+    const saveBtn = document.getElementById("save-button");
+    const restoreBtn = document.getElementById("restore-button");
+
+    if (!editorContainer) return;
+
+    const editor = new JSONEditor(editorContainer, {
+        mode: "tree",
+        modes: ["tree", "code"],
+        search: true,
+        history: true
     });
 
-    function validateJson() {
-        try {
-            editor.get();
-            updateSaveButton(true);
-            hideErrorMessage();
-        } catch (error) {
-            updateSaveButton(false);
-            showErrorMessage("Invalid JSON! Please correct the errors.");
-        }
-    }
-
-    function updateSaveButton(isValid) {
-        saveButton.disabled = !isValid;
-        saveButton.style.cursor = isValid ? "pointer" : "not-allowed";
-        saveButton.style.setProperty('background-color', isValid ? "#28a745" : "#ccc", 'important');
-        saveButton.style.setProperty('color', isValid ? "#fff" : "#666", 'important');
-    }
-
-    function showErrorMessage(message) {
-        Swal.fire({
-            title: "Error",
-            text: message,
-            icon: "error",
-            showConfirmButton: false,
-            timer: 5000,
-            position: 'top-right',
-            toast: true,
-            showClass: { popup: 'animate__animated animate__fadeInDown' },
-            hideClass: { popup: 'animate__animated animate__fadeOutUp' }
+    // Load file
+    fetch(getFileUrl)
+        .then(res => res.json())
+        .then(data => {
+            editor.set(data);
+        })
+        .catch(() => {
+            Swal.fire("Error", "Failed to load config file", "error");
         });
-    }
 
-    function hideErrorMessage() {
-        Swal.close();
-    }
+    // Save
+    saveBtn.addEventListener("click", () => {
+        const data = editor.get();
 
-    function saveJson() {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'Do you want to save the changes?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, save it!',
-            cancelButtonText: 'Cancel',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(SET_FILE_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(editor.get())
-                })
-                .then(() => {
-                    Swal.fire('Saved!', 'Your changes have been saved.', 'success');
-                })
-                .catch(error => {
-                    Swal.fire('Error!', 'There was an error saving your data.', 'error');
-                    console.error("Error saving JSON:", error);
-                });
-            }
+        fetch(setFileUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(() => {
+            Swal.fire("Saved", "Config saved successfully", "success");
+        })
+        .catch(() => {
+            Swal.fire("Error", "Failed to save config", "error");
         });
-    }
+    });
 
-    function restoreJson() {
-        fetch(GET_FILE_URL)
-            .then(response => response.json())
-            .then(json => {
-                editor.set(json);
-                Swal.fire('Success!', 'Your JSON has been loaded.', 'success');
+    // Restore
+    restoreBtn.addEventListener("click", () => {
+        fetch(getFileUrl)
+            .then(res => res.json())
+            .then(data => {
+                editor.set(data);
+                Swal.fire("Restored", "Config restored", "info");
             })
-            .catch(error => {
-                Swal.fire('Error!', 'There was an error loading your JSON.', 'error');
-                console.error("Error loading JSON:", error);
+            .catch(() => {
+                Swal.fire("Error", "Failed to restore config", "error");
             });
-    }
+    });
 
-    saveButton.addEventListener('click', saveJson);
-    restoreButton.addEventListener('click', restoreJson);
-
-    restoreJson();
 });

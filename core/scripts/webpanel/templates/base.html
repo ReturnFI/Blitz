@@ -8,89 +8,44 @@
     <link rel="icon" href="{{ url_for('assets', path='img/favicon.ico') }}">
     <title>Blitz Panel | {% block title %}{% endblock %}</title>
 
-    <!-- Google Font: Source Sans Pro -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Theme style -->
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- AdminLTE Core CSS Only -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
     <!-- iCheck Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/icheck-bootstrap@3.0.1/icheck-bootstrap.min.css">
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('assets', path='css/custom.css') }}">
+    
     {% block stylesheets %}{% endblock %}
 </head>
 
-<body class="hold-transition sidebar-mini sidebar-collapse">
-    <div class="wrapper">
+<body class="dark-mode">
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Mobile Hamburger Button -->
+    <button type="button" class="mobile-hamburger" id="mobileHamburger">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="wrapper" id="mainWrapper">
         
-        <!-- Update Notification Bar -->
-        <div id="updateBar" class="m-0 rounded-0 border-0" style="display: none; position: relative; z-index: 1100; background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-bottom: 1px solid rgba(0,0,0,0.1);">
-            <div class="container-fluid py-3">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <div class="d-flex align-items-center justify-content-center mr-3" style="width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 50%;">
-                            <i class="fas fa-rocket text-white" style="font-size: 16px;"></i>
-                        </div>
-                        <div>
-                            <div class="d-flex align-items-center">
-                                <span id="updateMessage" class="font-weight-bold text-white mb-0" style="font-size: 15px;">New version available</span>
-                                <button type="button" class="btn btn-link btn-sm p-0 ml-2 text-white" id="showChangelog" style="text-decoration: none; opacity: 0.8; transition: all 0.2s ease;">
-                                    <i class="fas fa-chevron-down" style="font-size: 12px;"></i>
-                                </button>
-                            </div>
-                            <small class="d-block" style="font-size: 13px; margin-top: 2px; color: rgba(255,255,255,0.8);">Click to view changelog and update options</small>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="dropdown">
-                            <button class="btn btn-sm dropdown-toggle text-white font-weight-bold" type="button" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); padding: 8px 16px; border-radius: 20px; font-size: 13px;" data-toggle="dropdown">
-                                <i class="fas fa-download mr-1"></i> Update Options
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-right shadow-sm">
-                                <a class="dropdown-item" href="#" id="viewRelease">
-                                    <i class="fas fa-external-link-alt mr-2 text-success"></i> View Release Page
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#" id="remindLater">
-                                    <i class="fas fa-clock mr-2 text-info"></i> Remind me tomorrow
-                                </a>
-                                <a class="dropdown-item" href="#" id="skipVersion">
-                                    <i class="fas fa-times mr-2 text-warning"></i> Skip this version
-                                </a>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm ml-2 text-white" id="closeUpdateBar" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); width: 32px; height: 32px; border-radius: 50%; padding: 0; opacity: 0.8; transition: all 0.2s ease;">
-                            <i class="fas fa-times" style="font-size: 12px;"></i>
-                        </button>
-                    </div>
-                </div>
-                <div id="changelogContent" class="mt-3" style="display: none;">
-                    <div style="background: rgba(0,0,0,0.15); border-radius: 8px; padding: 16px;">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-list-ul text-white mr-2" style="opacity: 0.8;"></i>
-                            <h6 class="mb-0 font-weight-bold text-white">Release Notes</h6>
-                        </div>
-                        <div id="changelogText" style="max-height: 180px; overflow-y: auto; font-size: 14px; line-height: 1.5; color: rgba(255,255,255,0.9);"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Navbar -->
-        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-                </li>
-            </ul>
-            <!-- Right navbar links -->
+        <nav class="main-header navbar navbar-expand">
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
-                    <a class="nav-link" id="darkModeToggle" href="#">
-                        <i id="darkModeIcon" class="fas fa-moon"></i>
+                    <a class="nav-link" id="darkModeToggle" href="javascript:void(0);" title="Toggle Theme">
+                        <i id="darkModeIcon" class="fas fa-sun"></i>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -101,82 +56,75 @@
             </ul>
         </nav>
 
-        <!-- Main Sidebar Container -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <!-- Brand Logo -->
-            <a href="{{ url_for('index') }}" class="brand-link">
-                <img src="{{ url_for('assets', path='img/logo.png') }}" alt="Blitz Logo"
-                    class="brand-image img-circle elevation-3" style="background-color: #f8f9fa; padding: 3px;">
-                <span class="brand-text font-weight-light">Blitz Dashboard</span>
-            </a>
-
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <!-- Sidebar Menu -->
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <li class="nav-item">
-                            <a href="{{ url_for('index') }}" class="nav-link {% if request.path == url_for('index') %}active{% endif %}">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('users') }}" class="nav-link {% if request.path == url_for('users') %}active{% endif %}">
-                                <i class="nav-icon fas fa-users"></i>
-                                <p>Users</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('settings') }}" class="nav-link {% if request.path == url_for('settings') %}active{% endif %}">
-                                <i class="nav-icon fas fa-tools"></i>
-                                <p>Settings</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('hysteria_settings') }}" class="nav-link {% if request.path == url_for('hysteria_settings') %}active{% endif %}">
-                                <i class="nav-icon fas fa-bolt"></i>
-                                <p>Hysteria</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('config') }}" class="nav-link {% if request.path == url_for('config') %}active{% endif %}">
-                                <i class="nav-icon fas fa-cog"></i>
-                                <p>Config</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" data-toggle="modal" data-target="#donationModal">
-                                <i class="nav-icon fas fa-heart text-danger"></i>
-                                <p>Support Us</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-book"></i>
-                                <p>
-                                    Documentation
-                                    <i class="right fas fa-angle-left"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('index') }}docs" target="_blank" class="nav-link">
-                                        <i class="nav-icon fas fa-network-wired"></i>
-                                        <p>API Documentation</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="https://returnfi.github.io/Blitz-docs/" target="_blank" rel="noopener noreferrer" class="nav-link">
-                                        <i class="nav-icon fas fa-lightbulb"></i>
-                                        <p>Guides & Tutorials</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </nav>
+        <!-- CUSTOM SIDEBAR -->
+        <aside class="custom-sidebar" id="sidebar">
+            <!-- Hamburger inside sidebar -->
+            <div class="sidebar-header">
+                <button type="button" class="hamburger-btn" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <a href="{{ url_for('index') }}" class="sidebar-brand">
+                    <img src="{{ url_for('assets', path='img/logo.png') }}" alt="Logo" class="brand-logo-img">
+                    <span class="brand-text">Blitz Panel</span>
+                </a>
             </div>
+
+            <!-- Menu -->
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{{ url_for('index') }}" class="nav-link {% if request.path == url_for('index') %}active{% endif %}">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('users') }}" class="nav-link {% if request.path == url_for('users') %}active{% endif %}">
+                            <i class="nav-icon fas fa-users"></i>
+                            <span class="nav-text">Users</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('settings') }}" class="nav-link {% if request.path == url_for('settings') %}active{% endif %}">
+                            <i class="nav-icon fas fa-tools"></i>
+                            <span class="nav-text">Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hysteria_settings') }}" class="nav-link {% if request.path == url_for('hysteria_settings') %}active{% endif %}">
+                            <i class="nav-icon fas fa-bolt"></i>
+                            <span class="nav-text">Hysteria</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('config') }}" class="nav-link {% if request.path == url_for('config') %}active{% endif %}">
+                            <i class="nav-icon fas fa-cog"></i>
+                            <span class="nav-text">Config</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-header">EXTRAS</li>
+                    
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-toggle="modal" data-target="#donationModal">
+                            <i class="nav-icon fas fa-heart text-danger"></i>
+                            <span class="nav-text">Support Us</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item has-submenu">
+                        <a href="javascript:void(0);" class="nav-link" aria-expanded="false">
+                            <i class="nav-icon fas fa-book"></i>
+                            <span class="nav-text">Documentation</span>
+                            <i class="submenu-arrow fas fa-chevron-left"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="{{ url_for('index') }}docs" target="_blank">API Documentation</a></li>
+                            <li><a href="https://returnfi.github.io/Blitz-docs/" target="_blank">Guides & Tutorials</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
         </aside>
 
         <!-- Content Wrapper -->
@@ -185,13 +133,16 @@
         </div>
 
         <!-- Footer -->
-        <footer class="main-footer">
+        <footer class="main-footer text-sm">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <div class="mb-2 mb-md-0">
-                    <a href="https://github.com/ReturnFI/Blitz" target="_blank" rel="noopener noreferrer" class="text-decoration-none mr-3">
+                <div class="mb-2 mb-md-0 order-2 order-md-1 footer-text">
+                    <strong>Copyright &copy; 2023 <a href="#" class="footer-link">Blitz Team</a>.</strong> All rights reserved.
+                </div>
+                <div class="mb-2 mb-md-0 order-1 order-md-2">
+                    <a href="https://github.com/ReturnFI/Blitz" target="_blank" rel="noopener noreferrer" class="text-decoration-none mr-3 footer-link">
                         <i class="fab fa-github"></i> GitHub
                     </a>
-                    <a href="https://t.me/hysteria2_panel" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                    <a href="https://t.me/hysteria2_panel" target="_blank" rel="noopener noreferrer" class="text-decoration-none footer-link">
                         <i class="fab fa-telegram-plane"></i> Telegram
                     </a>
                 </div>
@@ -201,42 +152,29 @@
 
     <!-- Donation Modal -->
     <div class="modal fade" id="donationModal" tabindex="-1" role="dialog" aria-labelledby="donationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 420px;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="donationModalLabel"><i class="fas fa-heart text-danger mr-2"></i>Support the Project</h5>
+                    <h5 class="modal-title" id="donationModalLabel"><i class="fas fa-heart text-danger mr-2"></i>Support Us</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body p-4">
-                    <p class="text-center">Your support means a lot and helps us improve the project continuously 💖</p>
-                    <div class="d-flex justify-content-center mt-3">
-                        <iframe src="https://nowpayments.io/embeds/donation-widget?api_key=8e3029da-4479-4426-9e84-9b0fbee7be97" width="346" height="623" frameborder="0" scrolling="no" style="overflow-y: hidden; border-radius: 8px;">
-                            Can't load widget
-                        </iframe>
-                    </div>
-
-                    <p class="text-center mt-3 font-weight-bold">Thank you for keeping this project alive and thriving! ❤️</p>
+                    <iframe src="https://nowpayments.io/embeds/donation-widget?api_key=8e3029da-4479-4426-9e84-9b0fbee7be97" width="100%" style="height: 500px; border: none; border-radius: 12px;"></iframe>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- REQUIRED SCRIPTS -->
-    <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <!-- Bootstrap 4 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- AdminLTE App -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
-    <!-- ShowdownJS for Markdown -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
-    <!-- Base JS -->
-    <script src="{{ url_for('assets', path='js/base.js') }}"></script>
     
+    <!-- Custom JS -->
+    <script src="{{ url_for('assets', path='js/base.js') }}"></script>
     {% block javascripts %}{% endblock %}
 </body>
 
