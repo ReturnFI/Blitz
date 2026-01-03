@@ -10,6 +10,7 @@ class User(BaseModel):
     expiry_date: str
     expiry_days: str
     day_usage: str
+    usage_days_display: str
     enable: bool
     unlimited_ip: bool
     online_count: int = 0
@@ -88,6 +89,7 @@ class User(BaseModel):
             percentage = (used_bytes / quota_bytes) * 100
         
         traffic_used_display = f"{used_formatted}/{quota_formatted} ({percentage:.1f}%)"
+        usage_days_display = f"{day_usage}/{display_expiry_days}"
 
         return {
             'username': user_data['username'],
@@ -97,6 +99,7 @@ class User(BaseModel):
             'expiry_date': display_expiry_date,
             'expiry_days': display_expiry_days,
             'day_usage': day_usage,
+            'usage_days_display': usage_days_display,
             'enable': not user_data.get('blocked', False),
             'unlimited_ip': user_data.get('unlimited_user', False),
             'online_count': user_data.get('online_count', 0),
