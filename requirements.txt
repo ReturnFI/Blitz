@@ -28,7 +28,7 @@ pymongo==4.16.0
 hysteria2-api==0.1.3
 
 # Web panel (FastAPI stack)
-fastapi==0.128.0
+fastapi==0.128.5
 Jinja2==3.1.6
 python-multipart==0.0.22
 hypercorn==0.18.0
