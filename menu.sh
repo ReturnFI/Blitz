@@ -416,7 +416,41 @@ edit_ips() {
 }
 
 hysteria_upgrade(){
-    bash <(curl https://raw.githubusercontent.com/ReturnFI/Blitz/main/upgrade.sh)
+    # Check if upgrade is already running
+    if [ -f "/tmp/hysteria_upgrade.lock" ]; then
+        echo -e "${red}Error:${NC} An upgrade process is already running or was interrupted."
+        echo -e "${yellow}Please check the system status and remove /tmp/hysteria_upgrade.lock if needed.${NC}"
+        return 1
+    fi
+
+    # Create lock file to prevent concurrent upgrades
+    echo $$ > /tmp/hysteria_upgrade.lock
+    echo -e "${yellow}Upgrade process started. PID: $$${NC}"
+
+    # Use nohup to continue running even if SSH disconnects
+    # Redirect output to log file for later inspection
+    nohup bash <(curl -s https://raw.githubusercontent.com/ReturnFI/Blitz/main/upgrade.sh) > /var/log/hysteria_upgrade.log 2>&1 &
+
+    UPGRADE_PID=$!
+    echo -e "${green}Upgrade process started in background (PID: $UPGRADE_PID).${NC}"
+    echo -e "${yellow}You can safely disconnect. The upgrade will continue in the background.${NC}"
+    echo -e "${yellow}Check progress with: tail -f /var/log/hysteria_upgrade.log${NC}"
+    echo -e "${yellow}Or check status with: ps aux | grep upgrade.sh${NC}"
+
+    # Wait a moment to let the process start
+    sleep 2
+
+    # Check if the process is still running
+    if ps -p $UPGRADE_PID > /dev/null; then
+        echo -e "${green}Upgrade process is running successfully in the background.${NC}"
+    else
+        echo -e "${red}Error:${NC} Upgrade process failed to start."
+        rm -f /tmp/hysteria_upgrade.lock
+        return 1
+    fi
+
+    # Remove lock file when done (this will be handled by the upgrade script)
+    # The upgrade script should remove the lock file when completed
 }
 
 warp_configure_handler() {
