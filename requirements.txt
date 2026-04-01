@@ -16,7 +16,7 @@ typing_extensions==4.15.0
 pyTelegramBotAPI==4.32.0
 qrcode==8.2
 pypng==0.20220715.0
-pillow==12.1.1
+pillow==12.2.0
 
 # Cache / misc
 propcache==0.4.1
