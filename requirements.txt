@@ -33,7 +33,7 @@ Jinja2==3.1.6
 python-multipart==0.0.26
 hypercorn==0.18.0
 pydantic==2.13.3
-pydantic-settings==2.13.1
+pydantic-settings==2.14.0
 annotated-types==0.7.0
 
 # SSL / ACME management
