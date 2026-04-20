@@ -32,7 +32,7 @@ fastapi==0.136.0
 Jinja2==3.1.6
 python-multipart==0.0.26
 hypercorn==0.18.0
-pydantic==2.12.5
+pydantic==2.13.3
 pydantic-settings==2.13.1
 annotated-types==0.7.0
 
