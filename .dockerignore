@@ -1,0 +1,25 @@
+# Keep secrets out of the Docker build context
+docker/.env
+
+# Git metadata
+.git
+.gitignore
+
+# Python caches / build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+
+# Virtual environments (built fresh in the image)
+hysteria2_venv/
+venv/
+.venv/
+
+# Editor and OS files
+.DS_Store
+*.swp
+*.swo

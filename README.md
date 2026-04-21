@@ -36,6 +36,36 @@ There is no need to execute the installation command again.
 
 
 
+## 🐳 Docker Installation (Local Build)
+
+> **Note:** This is a local build method for development and testing. A pre-built image on Docker Hub is planned for the future.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Quick Start
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/ReturnFI/Blitz.git
+cd Blitz
+
+# 2. Create and configure your environment file
+cp docker/.env.example docker/.env
+nano docker/.env
+
+# 3. Build and start
+docker compose up -d --build
+
+# 4. Get the admin password and web panel URL from the logs
+docker logs blitz 2>&1 | grep -E "ADMIN PASSWORD|Access at"
+```
+
+For the full list of environment variables, architecture details, common operations, and troubleshooting, see [docker/README.md](docker/README.md).
+
+---
+
 ## 💎 Sponsorship & Support 💖
 
 
