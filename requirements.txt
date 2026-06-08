@@ -1,5 +1,5 @@
 # Core async & network
-aiohttp==3.14.0
+aiohttp==3.14.1
 aiofiles==25.1.0
 
 # CLI tools
