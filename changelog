@@ -15,12 +15,9 @@ Special thanks to @HEXER365 for responsible disclosure 🙏
 
 Upgraded a set of dependencies via dependabot and maintenance PRs, including notable bumps:
 
-- FastAPI → 0.136.3
 - aiohttp → 3.14.0
 - pytelegrambotapi → 4.34.0
-- python-multipart → 0.0.32
 - requests → 2.34.2
-- pydantic-settings → 2.14.1
 - pymongo → 4.17.0
 - pillow → 12.2.0
 - psutil → 7.2.2
