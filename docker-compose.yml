@@ -1,0 +1,25 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - mongodb_data:/data/db
+
+  blitz:
+    build: .
+    container_name: blitz
+    restart: on-failure:5
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN   # required for WARP (wireguard) and IP limiting (iptables)
+    env_file: docker/.env
+    volumes:
+      - blitz_data:/blitz-data
+    depends_on:
+      - mongodb
+
+volumes:
+  blitz_data:
+  mongodb_data:
