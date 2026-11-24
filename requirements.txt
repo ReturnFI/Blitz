@@ -22,7 +22,7 @@ pillow==12.2.0
 propcache==0.5.2
 
 # Database
-pymongo==4.17.0
+pymongo==4.18.3
 
 # Hysteria2 API
 hysteria2-api==0.1.3
